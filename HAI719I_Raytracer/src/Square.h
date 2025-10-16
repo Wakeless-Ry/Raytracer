@@ -64,6 +64,15 @@ public:
         RaySquareIntersection intersection;
 
         //TODO calculer l'intersection rayon quad
+        Vec3 o = ray.origin();
+        Vec3 d = ray.direction();
+        Vec3 oc = centre - o;
+        Vec3 normal = m_normal;
+        Vec3 a = m_bottom_left;
+
+        float D = dot(a,n);
+
+        float t = (D - dot(o,n))/dot(d.n);
 
         return intersection;
     }

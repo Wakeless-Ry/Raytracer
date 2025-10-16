@@ -80,6 +80,25 @@ public:
     RaySceneIntersection computeIntersection(Ray const & ray) {
         RaySceneIntersection result;
         //TODO calculer les intersections avec les objets de la scene et garder la plus proche
+
+
+        
+        for(int i=0; i < spheres.size(), i++){
+            Sphere s = this->spheres[i];
+            RaySphereIntersection intersection = s.intersect(ray);
+            if(intersection.intersectionExists){
+                if(!result.intersectionExists || result.raySphereIntersection.t < s.t){
+                    result.intersectionExists = true;
+                    result.typeOfIntersectedObject = 1;
+                    result.objectIndex = i;
+                    result.t = intersection.t;
+                    result.RaySphereIntersection = intersection;
+                }
+                
+            }
+
+        }
+
         return result;
     }
 
@@ -90,6 +109,7 @@ public:
     Vec3 rayTraceRecursive( Ray ray , int NRemainingBounces ) {
 
         //TODO RaySceneIntersection raySceneIntersection = computeIntersection(ray);
+        //RaySceneIntersection raySceneIntersection = computeIntersection(ray);
         Vec3 color;
         return color;
     }
@@ -97,6 +117,9 @@ public:
 
     Vec3 rayTrace( Ray const & rayStart ) {
         //TODO appeler la fonction recursive
+
+        RaySceneIntersection raySceneIntersection = computeIntersection(ray);
+        
         Vec3 color;
         return color;
     }
