@@ -82,8 +82,9 @@ public:
         //TODO calculer les intersections avec les objets de la scene et garder la plus proche
 
 
-        
-        for(int i=0; i < spheres.size(), i++){
+
+        size_t sphere_size = spheres.size()
+        for(int i=0; i < sphere_size; i++){
             Sphere s = this->spheres[i];
             RaySphereIntersection intersection = s.intersect(ray);
             if(intersection.intersectionExists){
