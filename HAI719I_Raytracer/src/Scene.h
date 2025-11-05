@@ -6,7 +6,7 @@
 #include "Mesh.h"
 #include "Sphere.h"
 #include "Square.h"
-
+#include <cmath>
 #include <GL/glut.h>
 
 enum LightType
@@ -121,16 +121,11 @@ public:
         return result;
     }
 
-    Vec3 rayTraceRecursive(Ray ray, int remainingBounces)
-    {
-        Vec3 color = Vec3(0., 0., 0.);
-
-        RaySceneIntersection intersection = computeIntersection(ray);
-
+    Vec3 getAmbiante(RaySceneIntersection intersection){
+        Vec3 ambiante = Vec3(0., 0., 0.);
         if (intersection.intersectionExists)
         {
             Material material;
-
             switch (intersection.typeOfIntersectedObject)
             {
             case 1:
@@ -140,11 +135,97 @@ public:
                 material = this->squares[intersection.objectIndex].material;
                 break;
             }
-
-            color = material.diffuse_material;
+            ambiante = material.ambient_material;
         }
 
-        return color;
+        return ambiante;
+    }
+
+    Vec3 calcul_diffuse(Light light, RaySceneIntersection intersection){
+        Vec3 Lp = light.pos;
+        Vec3 P = Vec3(0.,0.,0.);
+        Vec3 N = Vec3(0.,0.,0.);
+        Vec3 light_diffuse = light.material;
+        Vec3 material_diffuse = Vec3(0.,0.,0.);
+
+        P = intersection.intersection;
+        N = intersection.normal;
+        switch (intersection.typeOfIntersectedObject)
+            {
+            case 0:
+                break;
+            case 1:
+                material_diffuse = this->spheres[intersection.objectIndex].material.diffuse_material;
+                break;
+            case 2:
+                material_diffuse = this->squares[intersection.objectIndex].material.diffuse_material;
+                break;
+            }
+            
+
+        Vec3 L = (Lp - P);
+        L.normalize();
+        float dotNL = std::max(0.,Vec3::dot(L,N));
+
+        return  dotNL * Vec3::compProduct(light_diffuse,material_diffuse);
+    }
+
+   Vec3 calcul_speculaire(Light light, RaySceneIntersection intersection, Ray ray){
+        Vec3 Lp = light.pos;
+        Vec3 P = Vec3(0.,0.,0.);
+        Vec3 N = Vec3(0.,0.,0.);
+        Vec3 light_spec = light.material;
+        Vec3 material_spec= Vec3(0.,0.,0.);
+
+        Vec3 V = -1 * ray.direction();
+        double shininess;
+
+        P = intersection.intersection;
+        N = intersection.normal;
+
+        switch (intersection.typeOfIntersectedObject)
+            {
+            case 1:
+                material_spec = this->spheres[intersection.objectIndex].material.specular_material;
+                shininess =this->spheres[intersection.objectIndex].material.shininess;
+                break;
+            case 2:
+                material_spec = this->squares[intersection.objectIndex].material.specular_material;
+                shininess =this->squares[intersection.objectIndex].material.shininess;
+                break;
+            }
+
+        Vec3 L = (Lp - P);
+        L.normalize();
+
+        float dotLN = std::max(0.,Vec3::dot(N,L));
+        Vec3 R = 2 * dotLN * N - L;
+
+        float dotRV = std::max(0.,Vec3::dot(R,V));
+        dotRV = pow(dotRV,shininess);
+
+        return  dotRV * Vec3::compProduct(light_spec,material_spec);
+    }
+
+    Vec3 phong(Ray ray, RaySceneIntersection intersection){
+        Vec3 ambiante = getAmbiante(intersection);
+        Vec3 tmp =Vec3(0.,0.,0.);
+        Vec3 I = Vec3(0.,0.,0.);
+
+        int n = lights.size();
+        for(int i=0; i<n;i++){
+            tmp+= calcul_diffuse(lights[i], intersection) + calcul_speculaire(lights[i], intersection,ray);  
+        }
+
+        return ambiante + tmp;
+
+    }
+
+    Vec3 rayTraceRecursive(Ray ray, int remainingBounces)
+    {
+        Vec3 color = Vec3(0., 0., 0.);
+        RaySceneIntersection intersection = computeIntersection(ray);
+        color = phong(ray,intersection);
     }
 
     Vec3 rayTrace(Ray const &rayStart)
