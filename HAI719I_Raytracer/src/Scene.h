@@ -8,6 +8,7 @@
 #include "Square.h"
 #include <cmath>
 #include <GL/glut.h>
+#include <stdlib.h>
 
 enum LightType
 {
@@ -87,7 +88,7 @@ public:
             RaySphereIntersection intersection = s.intersect(ray);
             if (intersection.intersectionExists)
             {
-                if (!result.intersectionExists || result.raySphereIntersection.t < intersection.t)
+                if (!result.intersectionExists || result.t > intersection.t)
                 {
                     result.intersectionExists = true;
                     result.typeOfIntersectedObject = 1;
@@ -105,7 +106,7 @@ public:
             RaySquareIntersection intersection = s.intersect(ray);
             if (intersection.intersectionExists)
             {
-                if (!result.intersectionExists || result.raySquareIntersection.t < intersection.t)
+                if (!result.intersectionExists || result.t > intersection.t)
                 {
                     result.intersectionExists = true;
                     result.typeOfIntersectedObject = 2;
@@ -215,21 +216,32 @@ public:
         return dotRV * Vec3::compProduct(light_spec, material_spec);
     }
 
-    bool isInShadow(Vec3 point, Light light)
+    float portion_visible(Vec3 point, Light light, float nbSamples = 15.f, float lightRadius = 0.3f)
     {
-        Vec3 L = light.pos - point;
-        float lightDistance = L.length();
-        L.normalize();
+        float nbVisible = 0.f;
+        // Créer un point aléatoire dans un cube autour de mon point lumineux
 
-        Vec3 shadowOrigine = point + 0.001f * L;
-        Ray shadowRayon(shadowOrigine, L);
+        for (int i = 0; i < nbSamples; i++)
+        {
+            Vec3 random_offset(((float)rand() / RAND_MAX - 0.5f) * 2.0f * lightRadius,
+                               ((float)rand() / RAND_MAX - 0.5f) * 2.0f * lightRadius,
+                               ((float)rand() / RAND_MAX - 0.5f) * 2.0f * lightRadius);
 
-        RaySceneIntersection shadowIntersection = computeIntersection(shadowRayon);
+            Vec3 randomLightPos = light.pos + random_offset;
 
-        if (shadowIntersection.intersectionExists && shadowIntersection.t < lightDistance && shadowIntersection.t > 0)
-            return true;
+            Vec3 L = randomLightPos - point;
+            float lightDistance = L.length();
+            L.normalize();
 
-        return false;
+            Vec3 shadowOrigine = point + 0.001f * L;
+            Ray shadowRayon(shadowOrigine, L);
+
+            RaySceneIntersection shadowIntersection = computeIntersection(shadowRayon);
+
+            if (shadowIntersection.intersectionExists && shadowIntersection.t < lightDistance && shadowIntersection.t > 0)
+                nbVisible++;
+        }
+        return 1 - (nbVisible / nbSamples);
     }
 
     Vec3 phong(Ray ray, RaySceneIntersection intersection)
@@ -251,12 +263,8 @@ public:
         int n = lights.size();
         for (int i = 0; i < n; i++)
         {
-            if (isInShadow(P, lights[i]))
-            {
-                std::cout << "ombre trouvée " << std::endl;
-                continue;
-            }
-            tmp += calcul_diffuse(lights[i], intersection) + calcul_speculaire(lights[i], intersection, ray);
+            float visibilite = portion_visible(P, lights[i]);
+            tmp += visibilite * (calcul_diffuse(lights[i], intersection) + calcul_speculaire(lights[i], intersection, ray));
         }
 
         return ambiante + tmp;
