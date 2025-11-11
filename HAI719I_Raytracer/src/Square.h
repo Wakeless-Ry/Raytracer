@@ -115,7 +115,7 @@ public:
         float D = Vec3::dot(a, n);
 
         float denom = Vec3::dot(d, n);
-        if (fabs(denom) < 0.0f)
+        if (fabs(denom) < 1e-6f)
         {
             intersection.intersectionExists = false;
             return intersection;

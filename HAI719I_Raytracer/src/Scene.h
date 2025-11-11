@@ -81,7 +81,7 @@ public:
         // TODO calculer les intersections avec les objets de la scene et garder la plus proche
 
         size_t sphere_size = spheres.size();
-        for (int i = 0; i < sphere_size; i++)
+        for (size_t i = 0; i < sphere_size; i++)
         {
             Sphere s = this->spheres[i];
             RaySphereIntersection intersection = s.intersect(ray);
@@ -99,7 +99,7 @@ public:
         }
 
         size_t square_size = squares.size();
-        for (int i = 0; i < square_size; i++)
+        for (size_t i = 0; i < square_size; i++)
         {
             Square s = this->squares[i];
             RaySquareIntersection intersection = s.intersect(ray);
@@ -121,7 +121,8 @@ public:
         return result;
     }
 
-    Vec3 getAmbiante(RaySceneIntersection intersection){
+    Vec3 getAmbiante(RaySceneIntersection intersection)
+    {
         Vec3 ambiante = Vec3(0., 0., 0.);
         if (intersection.intersectionExists)
         {
@@ -141,91 +142,135 @@ public:
         return ambiante;
     }
 
-    Vec3 calcul_diffuse(Light light, RaySceneIntersection intersection){
+    Vec3 calcul_diffuse(Light light, RaySceneIntersection intersection)
+    {
         Vec3 Lp = light.pos;
-        Vec3 P = Vec3(0.,0.,0.);
-        Vec3 N = Vec3(0.,0.,0.);
+        Vec3 P = Vec3(0., 0., 0.);
+        Vec3 N = Vec3(0., 0., 0.);
         Vec3 light_diffuse = light.material;
-        Vec3 material_diffuse = Vec3(0.,0.,0.);
+        Vec3 material_diffuse = Vec3(0., 0., 0.);
 
-        P = intersection.intersection;
-        N = intersection.normal;
         switch (intersection.typeOfIntersectedObject)
-            {
-            case 0:
-                break;
-            case 1:
-                material_diffuse = this->spheres[intersection.objectIndex].material.diffuse_material;
-                break;
-            case 2:
-                material_diffuse = this->squares[intersection.objectIndex].material.diffuse_material;
-                break;
-            }
-            
+        {
+        case 0:
+            break;
+        case 1:
+            P = intersection.raySphereIntersection.intersection;
+            N = intersection.raySphereIntersection.normal;
+            material_diffuse = this->spheres[intersection.objectIndex].material.diffuse_material;
+            break;
+        case 2:
+            P = intersection.raySquareIntersection.intersection;
+            N = intersection.raySquareIntersection.normal;
+            material_diffuse = this->squares[intersection.objectIndex].material.diffuse_material;
+            break;
+        }
 
         Vec3 L = (Lp - P);
         L.normalize();
-        float dotNL = std::max(0.,Vec3::dot(L,N));
+        float dotNL = std::max(0.f, Vec3::dot(L, N));
 
-        return  dotNL * Vec3::compProduct(light_diffuse,material_diffuse);
+        return dotNL * Vec3::compProduct(light_diffuse, material_diffuse);
     }
 
-   Vec3 calcul_speculaire(Light light, RaySceneIntersection intersection, Ray ray){
+    Vec3 calcul_speculaire(Light light, RaySceneIntersection intersection, Ray ray)
+    {
         Vec3 Lp = light.pos;
-        Vec3 P = Vec3(0.,0.,0.);
-        Vec3 N = Vec3(0.,0.,0.);
+        Vec3 P = Vec3(0., 0., 0.);
+        Vec3 N = Vec3(0., 0., 0.);
         Vec3 light_spec = light.material;
-        Vec3 material_spec= Vec3(0.,0.,0.);
+        Vec3 material_spec = Vec3(0., 0., 0.);
 
         Vec3 V = -1 * ray.direction();
-        double shininess;
-
-        P = intersection.intersection;
-        N = intersection.normal;
+        double shininess = 1.0;
 
         switch (intersection.typeOfIntersectedObject)
-            {
-            case 1:
-                material_spec = this->spheres[intersection.objectIndex].material.specular_material;
-                shininess =this->spheres[intersection.objectIndex].material.shininess;
-                break;
-            case 2:
-                material_spec = this->squares[intersection.objectIndex].material.specular_material;
-                shininess =this->squares[intersection.objectIndex].material.shininess;
-                break;
-            }
+        {
+        case 1:
+            P = intersection.raySphereIntersection.intersection;
+            N = intersection.raySphereIntersection.normal;
+            material_spec = this->spheres[intersection.objectIndex].material.specular_material;
+            shininess = this->spheres[intersection.objectIndex].material.shininess;
+            break;
+        case 2:
+            P = intersection.raySquareIntersection.intersection;
+            N = intersection.raySquareIntersection.normal;
+            material_spec = this->squares[intersection.objectIndex].material.specular_material;
+            shininess = this->squares[intersection.objectIndex].material.shininess;
+            break;
+        }
 
         Vec3 L = (Lp - P);
         L.normalize();
 
-        float dotLN = std::max(0.,Vec3::dot(N,L));
+        float dotLN = std::max(0.f, Vec3::dot(N, L));
         Vec3 R = 2 * dotLN * N - L;
 
-        float dotRV = std::max(0.,Vec3::dot(R,V));
-        dotRV = pow(dotRV,shininess);
+        R.normalize();
+        V.normalize();
 
-        return  dotRV * Vec3::compProduct(light_spec,material_spec);
+        float dotRV = std::max(0.f, Vec3::dot(R, V));
+        dotRV = pow(dotRV, shininess);
+
+        return dotRV * Vec3::compProduct(light_spec, material_spec);
     }
 
-    Vec3 phong(Ray ray, RaySceneIntersection intersection){
+    bool isInShadow(Vec3 point, Light light)
+    {
+        Vec3 L = light.pos - point;
+        float lightDistance = L.length();
+        L.normalize();
+
+        Vec3 shadowOrigine = point + 0.001f * L;
+        Ray shadowRayon(shadowOrigine, L);
+
+        RaySceneIntersection shadowIntersection = computeIntersection(shadowRayon);
+
+        if (shadowIntersection.intersectionExists && shadowIntersection.t < lightDistance && shadowIntersection.t > 0)
+            return true;
+
+        return false;
+    }
+
+    Vec3 phong(Ray ray, RaySceneIntersection intersection)
+    {
         Vec3 ambiante = getAmbiante(intersection);
-        Vec3 tmp =Vec3(0.,0.,0.);
-        Vec3 I = Vec3(0.,0.,0.);
+        Vec3 tmp = Vec3(0., 0., 0.);
+
+        Vec3 P;
+        switch (intersection.typeOfIntersectedObject)
+        {
+        case 1:
+            P = intersection.raySphereIntersection.intersection;
+            break;
+        case 2:
+            P = intersection.raySquareIntersection.intersection;
+            break;
+        }
 
         int n = lights.size();
-        for(int i=0; i<n;i++){
-            tmp+= calcul_diffuse(lights[i], intersection) + calcul_speculaire(lights[i], intersection,ray);  
+        for (int i = 0; i < n; i++)
+        {
+            if (isInShadow(P, lights[i]))
+            {
+                std::cout << "ombre trouvée " << std::endl;
+                continue;
+            }
+            tmp += calcul_diffuse(lights[i], intersection) + calcul_speculaire(lights[i], intersection, ray);
         }
 
         return ambiante + tmp;
-
     }
 
     Vec3 rayTraceRecursive(Ray ray, int remainingBounces)
     {
+        // std::cout << "Computing intersection..." << std::endl;
+
         Vec3 color = Vec3(0., 0., 0.);
         RaySceneIntersection intersection = computeIntersection(ray);
-        color = phong(ray,intersection);
+        color = phong(ray, intersection);
+
+        return color;
     }
 
     Vec3 rayTrace(Ray const &rayStart)
