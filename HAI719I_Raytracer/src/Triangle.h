@@ -7,7 +7,7 @@
 struct RayTriangleIntersection{
     bool intersectionExists;
     float t;
-    float w0,w1,w2;
+    float w0,w1,w2; // coeff barycentre
     unsigned int tIndex;
     Vec3 intersection;
     Vec3 normal;
@@ -38,6 +38,11 @@ public:
     Vec3 projectOnSupportPlane( Vec3 const & p ) const {
         Vec3 result;
         //TODO completer
+        
+
+
+
+
         return result;
     }
     float squareDistanceToSupportPlane( Vec3 const & p ) const {
@@ -64,6 +69,10 @@ public:
     RayTriangleIntersection getIntersection( Ray const & ray ) const {
         RayTriangleIntersection result;
         // 1) check that the ray is not parallel to the triangle:
+
+        Vec3 o = ray.origin();
+        Vec3 d = ray.direction();
+
 
         // 2) check that the triangle is "in front of" the ray:
 
