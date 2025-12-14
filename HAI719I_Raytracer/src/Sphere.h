@@ -89,6 +89,7 @@ public:
     RaySphereIntersection intersect(const Ray &ray) const
     {
         RaySphereIntersection intersection;
+        intersection.intersectionExists = false;
         // TODO calcul l'intersection rayon sphere
 
         /*Mes variables*/
@@ -96,29 +97,40 @@ public:
         float r = this->m_radius;
         Vec3 o = ray.origin();
         Vec3 d = ray.direction();
+        d.normalize();
         Vec3 oc = o - centre;
 
         /* Calcul du discriminant*/
-        float a = Vec3::dot(d, d);
+        float a = 1.f;
         float b = 2.0f * (Vec3::dot(d, (oc)));
-        float c = (oc.norm() * oc.norm()) - r * r;
+        float c = oc.squareLength() - r * r;
 
         float discriminant = b * b - 4.0f * a * c;
 
-        if (discriminant < 0)
+        if (discriminant < 0.f)
+        {
             intersection.intersectionExists = false;
+            return intersection;
+        }
         else
         {
-            intersection.intersectionExists = true;
-            float t1 = (-b - sqrt(discriminant)) / (2.0f * a);
-            float t2 = (-b + sqrt(discriminant)) / (2.0f * a);
-            float t = -1.0f;
-            if (t1 > 0.0f && t2 > 0.0f)
-                t = std::min(t1, t2);
-            else if (t1 < 0.0f)
-                t = t2;
-            else if (t2 < 0.0f)
+            float sqrtDisc = sqrt(discriminant);
+
+            float t1 = (-b - sqrtDisc) / (2.f * a);
+            float t2 = (-b + sqrtDisc) / (2.f * a);
+
+            float t = FLT_MAX;
+
+            if (t1 > 0.f)
                 t = t1;
+            if (t2 > 0.f && t2 < t)
+                t = t2;
+
+            if (t == FLT_MAX)
+            {
+                return intersection;
+            }
+            intersection.intersectionExists = true;
             intersection.t = t;
             intersection.intersection = o + t * d;
             intersection.normal = (intersection.intersection - centre);

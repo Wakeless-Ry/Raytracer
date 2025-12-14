@@ -1,7 +1,8 @@
 #ifndef PLANE_H
 #define PLANE_H
 #include "Vec3.h"
-#include "Line.h"
+#include "Ray.h"
+
 class Plane
 {
 private:
@@ -40,7 +41,7 @@ public:
     Vec3 getIntersectionPoint(Line const &L) const
     {
         float denom = Vec3::dot(L.direction(), this->m_normal);
-        if (fabs(denom) < 1e-6f)
+        if (fabs(denom) < 1e-8f)
         {
             return Vec3();
         }

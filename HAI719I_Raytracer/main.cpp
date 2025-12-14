@@ -182,7 +182,7 @@ void ray_trace_from_camera()
 
     Vec3 pos, dir;
     //    unsigned int nsamples = 100;
-    unsigned int nsamples = 20;
+    unsigned int nsamples = 1;
     std::vector<Vec3> image(w * h, Vec3(0, 0, 0));
     for (int y = 0; y < h; y++)
     {
@@ -358,10 +358,11 @@ int main(int argc, char **argv)
 
     camera.move(0., 0., -3.1);
     selected_scene = 0;
-    scenes.resize(3);
+    scenes.resize(4);
     scenes[0].setup_single_sphere();
     scenes[1].setup_single_square();
     scenes[2].setup_cornell_box();
+    scenes[3].setup_single_mesh();
 
     glutMainLoop();
     return EXIT_SUCCESS;
