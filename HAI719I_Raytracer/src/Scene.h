@@ -252,7 +252,7 @@ public:
         return dotRV * Vec3::compProduct(light_spec, material_spec);
     }
 
-    float portion_visible(Vec3 point, Light light, float nbSamples = 10.f, float lightRadius = 0.3f)
+    float portion_visible(Vec3 point, Light light, float nbSamples = 15.f, float lightRadius = 0.3f)
     {
         float nbOccluded = 0.f;
 

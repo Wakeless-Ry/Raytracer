@@ -182,7 +182,7 @@ void ray_trace_from_camera()
 
     Vec3 pos, dir;
     //    unsigned int nsamples = 100;
-    unsigned int nsamples = 1;
+    unsigned int nsamples = 20;
     std::vector<Vec3> image(w * h, Vec3(0, 0, 0));
     for (int y = 0; y < h; y++)
     {
