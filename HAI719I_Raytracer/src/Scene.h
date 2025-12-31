@@ -9,6 +9,7 @@
 #include <cmath>
 #include <GL/glut.h>
 #include <stdlib.h>
+#include "KDTree.h"
 
 enum LightType
 {
@@ -50,6 +51,8 @@ class Scene
     std::vector<Sphere> spheres;
     std::vector<Square> squares;
     std::vector<Light> lights;
+
+    KDTree kdTree;
 
 public:
     Scene()

@@ -256,6 +256,25 @@ public:
 
         return closestIntersection;
     }
+
+    AABB computeAABB() const
+    {
+        AABB box;
+
+        box.min = vertices[0].position;
+        box.max = vertices[0].position;
+
+        for (unsigned int i = 1; i < vertices.size(); i++)
+        {
+            for (int j = 0; j < 3; j++)
+            {
+                box.min[j] = std::min(box.min[j], vertices[i].position[j]);
+                box.max[j] = std::max(box.max[j], vertices[i].position[j]);
+            }
+        }
+
+        return box;
+    }
 };
 
 #endif

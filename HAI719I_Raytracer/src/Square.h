@@ -158,5 +158,10 @@ public:
 
         return intersection;
     }
+
+    AABB computeAABB() const
+    {
+        return Mesh::computeAABB();
+    }
 };
 #endif // SQUARE_H
