@@ -67,3 +67,84 @@ int KDTree::buildNode(const std::vector<int> &indices, int depth)
 
     return nodeIndex;
 }
+
+bool KDTree::intersect(const Ray &ray,
+                       RaySceneIntersection &intersection,
+                       const std::vector<Mesh> &meshes,
+                       const std::vector<Sphere> &spheres,
+                       const std::vector<Square> &squares) const
+{
+    if (nodes.empty())
+        return false;
+
+    intersectNode(0, ray, intersection, meshes, spheres, squares);
+    return intersection.intersectionExists;
+}
+
+void KDTree::intersectNode(int nodeIdx,
+                           const Ray &ray,
+                           RaySceneIntersection &best,
+                           const std::vector<Mesh> &meshes,
+                           const std::vector<Sphere> &spheres,
+                           const std::vector<Square> &squares) const
+{
+    const KDNode &node = nodes[nodeIdx];
+
+    if (!node.box.intersect(ray, 0.001f, best.t))
+        return;
+
+    if (node.isLeaf())
+    {
+        for (int primIdx : node.primIndices)
+        {
+            const Primitive &p = prims[primIdx];
+
+            if (p.type == PRIMITIVE_MESH)
+            {
+                RayTriangleIntersection h =
+                    meshes[p.index].intersect(ray);
+
+                if (h.intersectionExists && h.t < best.t)
+                {
+                    best.intersectionExists = true;
+                    best.typeOfIntersectedObject = 0;
+                    best.objectIndex = p.index;
+                    best.t = h.t;
+                    best.rayMeshIntersection = h;
+                }
+            }
+            else if (p.type == PRIMITIVE_SPHERE)
+            {
+                RaySphereIntersection h =
+                    spheres[p.index].intersect(ray);
+
+                if (h.intersectionExists && h.t < best.t)
+                {
+                    best.intersectionExists = true;
+                    best.typeOfIntersectedObject = 1;
+                    best.objectIndex = p.index;
+                    best.t = h.t;
+                    best.raySphereIntersection = h;
+                }
+            }
+            else if (p.type == PRIMITIVE_SQUARE)
+            {
+                RaySquareIntersection h =
+                    squares[p.index].intersect(ray);
+
+                if (h.intersectionExists && h.t < best.t)
+                {
+                    best.intersectionExists = true;
+                    best.typeOfIntersectedObject = 2;
+                    best.objectIndex = p.index;
+                    best.t = h.t;
+                    best.raySquareIntersection = h;
+                }
+            }
+        }
+        return;
+    }
+
+    intersectNode(node.left, ray, best, meshes, spheres, squares);
+    intersectNode(node.right, ray, best, meshes, spheres, squares);
+}
