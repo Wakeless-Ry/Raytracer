@@ -349,10 +349,25 @@ public:
         float cos1 = -Vec3::dot(N, I);
         float cos2 = 1.f - theta * theta * (1.f - cos1 * cos1);
 
-        if (cos2 < 2)
+        if (cos2 < 0.f)
             return Vec3(0., 0., 0.);
 
         return theta * I + (theta * cos1 - sqrt(cos2)) * N;
+    }
+
+    float reflection(const Vec3 &I, const Vec3 &N, float reflection_index)
+    {
+        float cos_incident = std::clamp((-1) * Vec3::dot(I, N), 0.f, 1.f);
+        float theta_incident = 1.f;
+        float theta_transmis = reflection_index;
+
+        if (Vec3::dot(I, N) > 0.f)
+            std::swap(theta_incident, theta_transmis);
+
+        float R0 = (theta_incident - theta_transmis) / (theta_incident + theta_transmis);
+        R0 = R0 * R0;
+
+        return R0 + (1.f - R0) * pow(1.f - cos_incident, 5.f);
     }
 
     Vec3 rayTraceRecursive(Ray ray, int remainingBounces)
@@ -399,6 +414,42 @@ public:
 
             Ray rayon_reflechie(P + 0.0001f * N, rayon);
             return rayTraceRecursive(rayon_reflechie, remainingBounces - 1);
+        }
+
+        case Material_Glass:
+        {
+            if (remainingBounces <= 0)
+                return Vec3(0, 0, 0);
+
+            Vec3 I = ray.direction();
+            I.normalize();
+
+            float transparency = material.transparency;
+
+            Vec3 tmp = N;
+            bool outside = Vec3::dot(I, N) < 0.f;
+            float theta = outside ? (1.f / material.index_medium) : material.index_medium;
+
+            if (!outside)
+                tmp = (-1) * N;
+
+            Vec3 reflectDir = I - 2.f * Vec3::dot(I, tmp) * tmp;
+            reflectDir.normalize();
+            Ray reflectRay(P + 0.0001f * tmp, reflectDir);
+            Vec3 reflectColor = rayTraceRecursive(reflectRay, remainingBounces - 1);
+
+            Vec3 refractDir = refract(I, tmp, theta);
+            Vec3 refractColor(0, 0, 0);
+
+            if (refractDir.squareLength() > 0)
+            {
+                refractDir.normalize();
+                Ray refractRay(P - 0.0001f * tmp, refractDir);
+                refractColor = rayTraceRecursive(refractRay, remainingBounces - 1);
+            }
+
+            float coef = reflection(I, tmp, material.index_medium);
+            return coef * reflectColor + (1.f - coef) * refractColor;
         }
 
         default:
@@ -641,8 +692,8 @@ public:
             Mesh &m = meshes.back();
             m.loadOFF("suzanne.off");
             m.centerAndScaleToUnit();
-            m.scale(Vec3(1.5, 1.5, 1.5));
-            m.translate(Vec3(0.0, -0.2, 0.0));
+            m.scale(Vec3(0.5, 0.5, 0.5));
+            m.translate(Vec3(0.0, -1.25, -1.25));
             m.build_arrays();
             m.material.type = Material_Mirror;
             m.material.diffuse_material = Vec3(0.8f, 0.4f, 1.0f);
@@ -650,6 +701,21 @@ public:
             m.material.shininess = 16;
             m.material.transparency = 0.;
             m.material.index_medium = 0.;
+        }
+
+        { // Glass Sphere
+            spheres.resize(spheres.size() + 1);
+            Sphere &s = spheres[spheres.size() - 1];
+            // s.m_center = Vec3(-1.0, -1.25, -0.5);
+            s.m_center = Vec3(0., 0., 1.0);
+            s.m_radius = 0.75f;
+            s.build_arrays();
+            s.material.type = Material_Glass;
+            s.material.diffuse_material = Vec3(1., 1., 1.);
+            s.material.specular_material = Vec3(1., 1., 1.);
+            s.material.shininess = 16;
+            s.material.transparency = 0.9f;
+            s.material.index_medium = 1.5f;
         }
 
         // Setup KDTree
@@ -784,31 +850,32 @@ public:
             s.material.shininess = 16;
         }
 
-        { // MIRRORED Sphere
+        // { // MIRRORED Sphere
 
-            spheres.resize(spheres.size() + 1);
-            Sphere &s = spheres[spheres.size() - 1];
-            s.m_center = Vec3(1.0, -1.25, 0.5);
-            s.m_radius = 0.75f;
-            s.build_arrays();
-            s.material.type = Material_Mirror;
-            s.material.diffuse_material = Vec3(1., 0., 0.);
-            s.material.specular_material = Vec3(1., 0., 0.);
-            s.material.shininess = 16;
-        }
+        //     spheres.resize(spheres.size() + 1);
+        //     Sphere &s = spheres[spheres.size() - 1];
+        //     s.m_center = Vec3(1.0, -1.25, 0.5);
+        //     s.m_radius = 0.75f;
+        //     s.build_arrays();
+        //     s.material.type = Material_Mirror;
+        //     s.material.diffuse_material = Vec3(1., 0., 0.);
+        //     s.material.specular_material = Vec3(1., 0., 0.);
+        //     s.material.shininess = 16;
+        // }
 
         { // Glass Sphere
             spheres.resize(spheres.size() + 1);
             Sphere &s = spheres[spheres.size() - 1];
-            s.m_center = Vec3(-1.0, -1.25, -0.5);
+            // s.m_center = Vec3(-1.0, -1.25, -0.5);
+            s.m_center = Vec3(0., 0., -0.5);
             s.m_radius = 0.75f;
             s.build_arrays();
             s.material.type = Material_Glass;
             s.material.diffuse_material = Vec3(1., 1., 1.);
             s.material.specular_material = Vec3(1., 1., 1.);
             s.material.shininess = 16;
-            s.material.transparency = 0.;
-            s.material.index_medium = 0.;
+            s.material.transparency = 0.9f;
+            s.material.index_medium = 1.5f;
         }
 
         // Setup KDTree
