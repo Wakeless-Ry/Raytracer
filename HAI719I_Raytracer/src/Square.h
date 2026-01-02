@@ -4,6 +4,7 @@
 #include <vector>
 #include "Mesh.h"
 #include <cmath>
+#include "AABB.h"
 
 struct RaySquareIntersection
 {

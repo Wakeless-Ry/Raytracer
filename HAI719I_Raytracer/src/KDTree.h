@@ -3,7 +3,7 @@
 
 #include <vector>
 #include "Primitive.h"
-#include "Scene.h"
+#include "RaySceneIntersection.h"
 
 struct KDNode
 {

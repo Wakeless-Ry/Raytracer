@@ -1,16 +1,16 @@
-# Makefile pour un unique exécutable
+# Makefile pour un unique exï¿½cutable
 
-# liste des variables à renseigner
+# liste des variables ï¿½ renseigner
 #   CIBLE : nom du programme ( $(CIBLE).c doit contenir main() )
 #   SRCS : ensemble des fichiers sources 
-#   LIBS : liste des bibliothèques utiles à l'édition des liens 
+#   LIBS : liste des bibliothï¿½ques utiles ï¿½ l'ï¿½dition des liens 
 #          (format : -lnom1 -lnom2 ...) 
-#   PREFIX : chemin de la hiérarchie 
+#   PREFIX : chemin de la hiï¿½rarchie 
 #
 # NE PAS OUBLIER D'AJOUTER LA LISTE DES DEPENDANCES A LA FIN DU FICHIER
 
 CIBLE = main
-SRCS =  src/Camera.cpp main.cpp src/Trackball.cpp src/imageLoader.cpp src/Mesh.cpp 
+SRCS =  src/Camera.cpp main.cpp src/Trackball.cpp src/imageLoader.cpp src/Mesh.cpp src/KDTree.cpp
 LIBS =  -lglut -lGLU -lGL -lm -lpthread 
 #########################################################"
 
@@ -29,15 +29,15 @@ CXXFLAGS = -Wall -O3
 # option du preprocesseur
 CPPFLAGS =  -I$(INCDIR) 
 
-# options du linker et liste des bibliothèques à charger
+# options du linker et liste des bibliothï¿½ques ï¿½ charger
 LDFLAGS = -L/usr/X11R6/lib              
 LDLIBS = -L$(LIBDIR) $(LIBS)  
 
-# construire la liste des fichiers objets une nouvelle chaine à partir
+# construire la liste des fichiers objets une nouvelle chaine ï¿½ partir
 # de SRCS en substituant les occurences de ".c" par ".o" 
 OBJS = $(SRCS:.cpp=.o)   
 
-# cible par défaut
+# cible par dï¿½faut
 $(CIBLE): $(OBJS)
 
 install:  $(CIBLE)
@@ -57,9 +57,10 @@ veryclean: clean
 dep:
 	gcc $(CPPFLAGS) -MM $(SRCS)
 
-# liste des dépendances générée par 'make dep'
+# liste des dï¿½pendances gï¿½nï¿½rï¿½e par 'make dep'
 Camera.o: src/Camera.cpp src/Camera.h src/Vec3.h src/Trackball.h
 main.o: main.cpp src/Vec3.h src/Camera.h src/Trackball.h
 Trackball.o: src/Trackball.cpp src/Trackball.h
+KDTree.o: src/KDTree.cpp src/KDTree.h src/AABB.h src/Primitive.h
 
 

@@ -7,6 +7,7 @@
 #include "Ray.h"
 #include "Triangle.h"
 #include "Material.h"
+#include "AABB.h"
 
 #include <GL/glut.h>
 

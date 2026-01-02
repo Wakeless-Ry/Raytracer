@@ -10,6 +10,7 @@
 #include <GL/glut.h>
 #include <stdlib.h>
 #include "KDTree.h"
+#include "RaySceneIntersection.h"
 
 enum LightType
 {
@@ -31,18 +32,6 @@ struct Light
     float powerCorrection;
 
     Light() : powerCorrection(1.0) {}
-};
-
-struct RaySceneIntersection
-{
-    bool intersectionExists;
-    unsigned int typeOfIntersectedObject;
-    unsigned int objectIndex;
-    float t;
-    RayTriangleIntersection rayMeshIntersection;
-    RaySphereIntersection raySphereIntersection;
-    RaySquareIntersection raySquareIntersection;
-    RaySceneIntersection() : intersectionExists(false), t(FLT_MAX) {}
 };
 
 class Scene
@@ -79,73 +68,81 @@ public:
         }
     }
 
+    // Ancien compute intersection
+    //  RaySceneIntersection computeIntersection(Ray const &ray)
+    //  {
+    //      RaySceneIntersection result;
+    //      // TODO calculer les intersections avec les objets de la scene et garder la plus proche
+
+    //     size_t mesh_size = meshes.size();
+    //     for (size_t i = 0; i < mesh_size; i++)
+    //     {
+    //         Mesh const &m = this->meshes[i];
+    //         RayTriangleIntersection intersection = m.intersect(ray);
+    //         if (intersection.intersectionExists)
+    //         {
+    //             if (!result.intersectionExists || result.t > intersection.t)
+    //             {
+    //                 result.intersectionExists = true;
+    //                 result.typeOfIntersectedObject = 0;
+    //                 result.objectIndex = i;
+    //                 result.t = intersection.t;
+    //                 result.rayMeshIntersection = intersection;
+    //                 result.rayMeshIntersection.w0 = intersection.w0;
+    //                 result.rayMeshIntersection.w1 = intersection.w1;
+    //                 result.rayMeshIntersection.w2 = intersection.w2;
+    //                 result.rayMeshIntersection.normal = intersection.normal;
+    //             }
+    //         }
+    //     }
+
+    //     size_t sphere_size = spheres.size();
+    //     for (size_t i = 0; i < sphere_size; i++)
+    //     {
+    //         Sphere const &s = this->spheres[i];
+    //         RaySphereIntersection intersection = s.intersect(ray);
+    //         if (intersection.intersectionExists)
+    //         {
+    //             if (!result.intersectionExists || result.t > intersection.t)
+    //             {
+    //                 result.intersectionExists = true;
+    //                 result.typeOfIntersectedObject = 1;
+    //                 result.objectIndex = i;
+    //                 result.t = intersection.t;
+    //                 result.raySphereIntersection = intersection;
+    //                 result.raySphereIntersection.normal = intersection.normal;
+    //             }
+    //         }
+    //     }
+
+    //     size_t square_size = squares.size();
+    //     for (size_t i = 0; i < square_size; i++)
+    //     {
+    //         Square const &s = this->squares[i];
+    //         RaySquareIntersection intersection = s.intersect(ray);
+    //         if (intersection.intersectionExists)
+    //         {
+    //             if (!result.intersectionExists || result.t > intersection.t)
+    //             {
+    //                 result.intersectionExists = true;
+    //                 result.typeOfIntersectedObject = 2;
+    //                 result.objectIndex = i;
+    //                 result.t = intersection.t;
+    //                 result.raySquareIntersection = intersection;
+    //                 result.raySquareIntersection.u = intersection.u;
+    //                 result.raySquareIntersection.v = intersection.v;
+    //                 result.raySquareIntersection.normal = intersection.normal;
+    //             }
+    //         }
+    //     }
+
+    //     return result;
+    // }
+
     RaySceneIntersection computeIntersection(Ray const &ray)
     {
         RaySceneIntersection result;
-        // TODO calculer les intersections avec les objets de la scene et garder la plus proche
-
-        size_t mesh_size = meshes.size();
-        for (size_t i = 0; i < mesh_size; i++)
-        {
-            Mesh const &m = this->meshes[i];
-            RayTriangleIntersection intersection = m.intersect(ray);
-            if (intersection.intersectionExists)
-            {
-                if (!result.intersectionExists || result.t > intersection.t)
-                {
-                    result.intersectionExists = true;
-                    result.typeOfIntersectedObject = 0;
-                    result.objectIndex = i;
-                    result.t = intersection.t;
-                    result.rayMeshIntersection = intersection;
-                    result.rayMeshIntersection.w0 = intersection.w0;
-                    result.rayMeshIntersection.w1 = intersection.w1;
-                    result.rayMeshIntersection.w2 = intersection.w2;
-                    result.rayMeshIntersection.normal = intersection.normal;
-                }
-            }
-        }
-
-        size_t sphere_size = spheres.size();
-        for (size_t i = 0; i < sphere_size; i++)
-        {
-            Sphere const &s = this->spheres[i];
-            RaySphereIntersection intersection = s.intersect(ray);
-            if (intersection.intersectionExists)
-            {
-                if (!result.intersectionExists || result.t > intersection.t)
-                {
-                    result.intersectionExists = true;
-                    result.typeOfIntersectedObject = 1;
-                    result.objectIndex = i;
-                    result.t = intersection.t;
-                    result.raySphereIntersection = intersection;
-                    result.raySphereIntersection.normal = intersection.normal;
-                }
-            }
-        }
-
-        size_t square_size = squares.size();
-        for (size_t i = 0; i < square_size; i++)
-        {
-            Square const &s = this->squares[i];
-            RaySquareIntersection intersection = s.intersect(ray);
-            if (intersection.intersectionExists)
-            {
-                if (!result.intersectionExists || result.t > intersection.t)
-                {
-                    result.intersectionExists = true;
-                    result.typeOfIntersectedObject = 2;
-                    result.objectIndex = i;
-                    result.t = intersection.t;
-                    result.raySquareIntersection = intersection;
-                    result.raySquareIntersection.u = intersection.u;
-                    result.raySquareIntersection.v = intersection.v;
-                    result.raySquareIntersection.normal = intersection.normal;
-                }
-            }
-        }
-
+        kdTree.intersect(ray, result, meshes, spheres, squares);
         return result;
     }
 
@@ -255,7 +252,7 @@ public:
         return dotRV * Vec3::compProduct(light_spec, material_spec);
     }
 
-    float portion_visible(Vec3 point, Light light, float nbSamples = 15.f, float lightRadius = 0.3f)
+    float portion_visible(Vec3 point, Light light, float nbSamples = 1.f, float lightRadius = 0.3f)
     {
         float nbOccluded = 0.f;
 
@@ -431,6 +428,41 @@ public:
             s.material.specular_material = Vec3(0.2, 0.2, 0.2);
             s.material.shininess = 20;
         }
+
+        // Setup KDTree
+
+        std::vector<Primitive> prims;
+
+        for (int i = 0; i < meshes.size(); i++)
+        {
+            Primitive p;
+            p.type = PRIMITIVE_MESH;
+            p.index = i;
+            p.box = meshes[i].computeAABB();
+            prims.push_back(p);
+        }
+
+        for (int i = 0; i < spheres.size(); i++)
+        {
+            Primitive p;
+            p.type = PRIMITIVE_SPHERE;
+            p.index = i;
+            float r = spheres[i].m_radius;
+            p.box.min = spheres[i].m_center - Vec3(r, r, r);
+            p.box.max = spheres[i].m_center + Vec3(r, r, r);
+            prims.push_back(p);
+        }
+
+        for (int i = 0; i < squares.size(); i++)
+        {
+            Primitive p;
+            p.type = PRIMITIVE_SQUARE;
+            p.index = i;
+            p.box = squares[i].computeAABB();
+            prims.push_back(p);
+        }
+
+        kdTree.build(prims);
     }
 
     void setup_single_square()
@@ -460,6 +492,41 @@ public:
             s.material.specular_material = Vec3(0.8, 0.8, 0.8);
             s.material.shininess = 20;
         }
+
+        // Setup KDTree
+
+        std::vector<Primitive> prims;
+
+        for (int i = 0; i < meshes.size(); i++)
+        {
+            Primitive p;
+            p.type = PRIMITIVE_MESH;
+            p.index = i;
+            p.box = meshes[i].computeAABB();
+            prims.push_back(p);
+        }
+
+        for (int i = 0; i < spheres.size(); i++)
+        {
+            Primitive p;
+            p.type = PRIMITIVE_SPHERE;
+            p.index = i;
+            float r = spheres[i].m_radius;
+            p.box.min = spheres[i].m_center - Vec3(r, r, r);
+            p.box.max = spheres[i].m_center + Vec3(r, r, r);
+            prims.push_back(p);
+        }
+
+        for (int i = 0; i < squares.size(); i++)
+        {
+            Primitive p;
+            p.type = PRIMITIVE_SQUARE;
+            p.index = i;
+            p.box = squares[i].computeAABB();
+            prims.push_back(p);
+        }
+
+        kdTree.build(prims);
     }
 
     void setup_single_mesh()
@@ -573,6 +640,41 @@ public:
             m.material.transparency = 0.;
             m.material.index_medium = 0.;
         }
+
+        // Setup KDTree
+
+        std::vector<Primitive> prims;
+
+        for (int i = 0; i < meshes.size(); i++)
+        {
+            Primitive p;
+            p.type = PRIMITIVE_MESH;
+            p.index = i;
+            p.box = meshes[i].computeAABB();
+            prims.push_back(p);
+        }
+
+        for (int i = 0; i < spheres.size(); i++)
+        {
+            Primitive p;
+            p.type = PRIMITIVE_SPHERE;
+            p.index = i;
+            float r = spheres[i].m_radius;
+            p.box.min = spheres[i].m_center - Vec3(r, r, r);
+            p.box.max = spheres[i].m_center + Vec3(r, r, r);
+            prims.push_back(p);
+        }
+
+        for (int i = 0; i < squares.size(); i++)
+        {
+            Primitive p;
+            p.type = PRIMITIVE_SQUARE;
+            p.index = i;
+            p.box = squares[i].computeAABB();
+            prims.push_back(p);
+        }
+
+        kdTree.build(prims);
     }
 
     void setup_cornell_box()
@@ -697,6 +799,41 @@ public:
             s.material.transparency = 0.;
             s.material.index_medium = 0.;
         }
+
+        // Setup KDTree
+
+        std::vector<Primitive> prims;
+
+        for (int i = 0; i < meshes.size(); i++)
+        {
+            Primitive p;
+            p.type = PRIMITIVE_MESH;
+            p.index = i;
+            p.box = meshes[i].computeAABB();
+            prims.push_back(p);
+        }
+
+        for (int i = 0; i < spheres.size(); i++)
+        {
+            Primitive p;
+            p.type = PRIMITIVE_SPHERE;
+            p.index = i;
+            float r = spheres[i].m_radius;
+            p.box.min = spheres[i].m_center - Vec3(r, r, r);
+            p.box.max = spheres[i].m_center + Vec3(r, r, r);
+            prims.push_back(p);
+        }
+
+        for (int i = 0; i < squares.size(); i++)
+        {
+            Primitive p;
+            p.type = PRIMITIVE_SQUARE;
+            p.index = i;
+            p.box = squares[i].computeAABB();
+            prims.push_back(p);
+        }
+
+        kdTree.build(prims);
     }
 };
 
