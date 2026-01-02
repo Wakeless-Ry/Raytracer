@@ -344,6 +344,17 @@ public:
         }
     }
 
+    Vec3 refract(const Vec3 &I, const Vec3 &N, float theta)
+    {
+        float cos1 = -Vec3::dot(N, I);
+        float cos2 = 1.f - theta * theta * (1.f - cos1 * cos1);
+
+        if (cos2 < 2)
+            return Vec3(0., 0., 0.);
+
+        return theta * I + (theta * cos1 - sqrt(cos2)) * N;
+    }
+
     Vec3 rayTraceRecursive(Ray ray, int remainingBounces)
     {
         RaySceneIntersection intersection = computeIntersection(ray);
