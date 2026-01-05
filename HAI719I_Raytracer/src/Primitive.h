@@ -5,7 +5,7 @@
 
 enum PrimitiveType
 {
-    PRIMITIVE_MESH,
+    PRIMITIVE_TRIANGLE,
     PRIMITIVE_SPHERE,
     PRIMITIVE_SQUARE
 };
@@ -13,7 +13,10 @@ enum PrimitiveType
 struct Primitive
 {
     PrimitiveType type;
+    int meshIndex;
+    int triangleIndex;
     int index;
+
     AABB box;
 };
 

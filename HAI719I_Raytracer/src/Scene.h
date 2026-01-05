@@ -252,7 +252,7 @@ public:
         return dotRV * Vec3::compProduct(light_spec, material_spec);
     }
 
-    float portion_visible(Vec3 point, Light light, float nbSamples = 1.f, float lightRadius = 0.3f)
+    float portion_visible(Vec3 point, Light light, float nbSamples = 15.f, float lightRadius = 0.3f)
     {
         float nbOccluded = 0.f;
 
@@ -418,7 +418,7 @@ public:
 
         case Material_Glass:
         {
-            if (remainingBounces <= 0)
+            if (remainingBounces <= 3)
                 return Vec3(0, 0, 0);
 
             Vec3 I = ray.direction();
@@ -495,13 +495,17 @@ public:
 
         std::vector<Primitive> prims;
 
-        for (int i = 0; i < meshes.size(); i++)
+        for (int m = 0; m < meshes.size(); m++)
         {
-            Primitive p;
-            p.type = PRIMITIVE_MESH;
-            p.index = i;
-            p.box = meshes[i].computeAABB();
-            prims.push_back(p);
+            for (int t = 0; t < meshes[m].triangles.size(); t++)
+            {
+                Primitive p;
+                p.type = PRIMITIVE_TRIANGLE;
+                p.meshIndex = m;
+                p.triangleIndex = t;
+                p.box = meshes[m].computeTriangleAABB(t);
+                prims.push_back(p);
+            }
         }
 
         for (int i = 0; i < spheres.size(); i++)
@@ -559,13 +563,17 @@ public:
 
         std::vector<Primitive> prims;
 
-        for (int i = 0; i < meshes.size(); i++)
+        for (int m = 0; m < meshes.size(); m++)
         {
-            Primitive p;
-            p.type = PRIMITIVE_MESH;
-            p.index = i;
-            p.box = meshes[i].computeAABB();
-            prims.push_back(p);
+            for (int t = 0; t < meshes[m].triangles.size(); t++)
+            {
+                Primitive p;
+                p.type = PRIMITIVE_TRIANGLE;
+                p.meshIndex = m;
+                p.triangleIndex = t;
+                p.box = meshes[m].computeTriangleAABB(t);
+                prims.push_back(p);
+            }
         }
 
         for (int i = 0; i < spheres.size(); i++)
@@ -722,13 +730,17 @@ public:
 
         std::vector<Primitive> prims;
 
-        for (int i = 0; i < meshes.size(); i++)
+        for (int m = 0; m < meshes.size(); m++)
         {
-            Primitive p;
-            p.type = PRIMITIVE_MESH;
-            p.index = i;
-            p.box = meshes[i].computeAABB();
-            prims.push_back(p);
+            for (int t = 0; t < meshes[m].triangles.size(); t++)
+            {
+                Primitive p;
+                p.type = PRIMITIVE_TRIANGLE;
+                p.meshIndex = m;
+                p.triangleIndex = t;
+                p.box = meshes[m].computeTriangleAABB(t);
+                prims.push_back(p);
+            }
         }
 
         for (int i = 0; i < spheres.size(); i++)
@@ -850,24 +862,24 @@ public:
             s.material.shininess = 16;
         }
 
-        // { // MIRRORED Sphere
+        { // MIRRORED Sphere
 
-        //     spheres.resize(spheres.size() + 1);
-        //     Sphere &s = spheres[spheres.size() - 1];
-        //     s.m_center = Vec3(1.0, -1.25, 0.5);
-        //     s.m_radius = 0.75f;
-        //     s.build_arrays();
-        //     s.material.type = Material_Mirror;
-        //     s.material.diffuse_material = Vec3(1., 0., 0.);
-        //     s.material.specular_material = Vec3(1., 0., 0.);
-        //     s.material.shininess = 16;
-        // }
+            spheres.resize(spheres.size() + 1);
+            Sphere &s = spheres[spheres.size() - 1];
+            s.m_center = Vec3(1.0, -1.25, 0.5);
+            s.m_radius = 0.75f;
+            s.build_arrays();
+            s.material.type = Material_Mirror;
+            s.material.diffuse_material = Vec3(1., 0., 0.);
+            s.material.specular_material = Vec3(1., 0., 0.);
+            s.material.shininess = 16;
+        }
 
         { // Glass Sphere
             spheres.resize(spheres.size() + 1);
             Sphere &s = spheres[spheres.size() - 1];
-            // s.m_center = Vec3(-1.0, -1.25, -0.5);
-            s.m_center = Vec3(0., 0., -0.5);
+            s.m_center = Vec3(-1.0, -1.25, -0.5);
+            // s.m_center = Vec3(0., 0., -0.5);
             s.m_radius = 0.75f;
             s.build_arrays();
             s.material.type = Material_Glass;
@@ -882,13 +894,17 @@ public:
 
         std::vector<Primitive> prims;
 
-        for (int i = 0; i < meshes.size(); i++)
+        for (int m = 0; m < meshes.size(); m++)
         {
-            Primitive p;
-            p.type = PRIMITIVE_MESH;
-            p.index = i;
-            p.box = meshes[i].computeAABB();
-            prims.push_back(p);
+            for (int t = 0; t < meshes[m].triangles.size(); t++)
+            {
+                Primitive p;
+                p.type = PRIMITIVE_TRIANGLE;
+                p.meshIndex = m;
+                p.triangleIndex = t;
+                p.box = meshes[m].computeTriangleAABB(t);
+                prims.push_back(p);
+            }
         }
 
         for (int i = 0; i < spheres.size(); i++)

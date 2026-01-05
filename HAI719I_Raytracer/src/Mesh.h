@@ -276,6 +276,26 @@ public:
 
         return box;
     }
+
+    AABB computeTriangleAABB(int t) const
+    {
+        AABB box;
+
+        const MeshTriangle &tri = triangles[t];
+        box.min = vertices[tri[0]].position;
+        box.max = box.min;
+
+        for (int i = 1; i < 3; i++)
+        {
+            Vec3 p = vertices[tri[i]].position;
+            for (int a = 0; a < 3; a++)
+            {
+                box.min[a] = std::min(box.min[a], p[a]);
+                box.max[a] = std::max(box.max[a], p[a]);
+            }
+        }
+        return box;
+    }
 };
 
 #endif

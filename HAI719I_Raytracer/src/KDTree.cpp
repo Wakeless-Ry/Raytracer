@@ -17,19 +17,24 @@ void KDTree::build(const std::vector<Primitive> &primitives)
     buildNode(indices, 0);
 }
 
-Vec3 bmin(1e30f, 1e30f, 1e30f);
-Vec3 bmax(-1e30f, -1e30f, -1e30f);
-
 int KDTree::buildNode(const std::vector<int> &indices, int depth)
 {
     KDNode node;
+
+    Vec3 bmin(1e30f, 1e30f, 1e30f);
+    Vec3 bmax(-1e30f, -1e30f, -1e30f);
 
     for (int idx : indices)
     {
         for (int i = 0; i < 3; i++)
         {
-            bmin[i] = std::min(bmin[i], prims[idx].box.min[i]);
-            bmax[i] = std::max(bmax[i], prims[idx].box.max[i]);
+            float valMin = static_cast<float>(prims[idx].box.min[i]);
+            float valMax = static_cast<float>(prims[idx].box.max[i]);
+
+            if (valMin < bmin[i])
+                bmin[i] = valMin;
+            if (valMax > bmax[i])
+                bmax[i] = valMax;
         }
     }
     node.box.min = bmin;
@@ -97,16 +102,24 @@ void KDTree::intersectNode(int nodeIdx,
         {
             const Primitive &p = prims[primIdx];
 
-            if (p.type == PRIMITIVE_MESH)
+            if (p.type == PRIMITIVE_TRIANGLE)
             {
-                RayTriangleIntersection h =
-                    meshes[p.index].intersect(ray);
+                const Mesh &mesh = meshes[p.meshIndex];
+
+                const MeshTriangle &tri = mesh.triangles[p.triangleIndex];
+                Vec3 p0 = mesh.vertices[tri[0]].position;
+                Vec3 p1 = mesh.vertices[tri[1]].position;
+                Vec3 p2 = mesh.vertices[tri[2]].position;
+
+                Triangle triangle(p0, p1, p2);
+
+                RayTriangleIntersection h = triangle.getIntersection(ray, mesh.vertices[tri[0]].normal, mesh.vertices[tri[1]].normal, mesh.vertices[tri[2]].normal);
 
                 if (h.intersectionExists && h.t < best.t)
                 {
                     best.intersectionExists = true;
-                    best.typeOfIntersectedObject = 0;
-                    best.objectIndex = p.index;
+                    best.typeOfIntersectedObject = 0; // mesh
+                    best.objectIndex = p.meshIndex;
                     best.t = h.t;
                     best.rayMeshIntersection = h;
                 }
