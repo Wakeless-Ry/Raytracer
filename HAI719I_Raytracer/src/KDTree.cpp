@@ -26,17 +26,13 @@ int KDTree::buildNode(const std::vector<int> &indices, int depth)
 
     for (int idx : indices)
     {
-        for (int i = 0; i < 3; i++)
+        for (int a = 0; a < 3; a++)
         {
-            float valMin = static_cast<float>(prims[idx].box.min[i]);
-            float valMax = static_cast<float>(prims[idx].box.max[i]);
-
-            if (valMin < bmin[i])
-                bmin[i] = valMin;
-            if (valMax > bmax[i])
-                bmax[i] = valMax;
+            bmin[a] = std::min(bmin[a], prims[idx].box.min[a]);
+            bmax[a] = std::max(bmax[a], prims[idx].box.max[a]);
         }
     }
+
     node.box.min = bmin;
     node.box.max = bmax;
 
@@ -52,14 +48,25 @@ int KDTree::buildNode(const std::vector<int> &indices, int depth)
     int axis = depth % 3;
     float split = 0.5f * (bmin[axis] + bmax[axis]);
 
-    std::vector<int> leftIndices, rightIndices;
+    nodes[nodeIndex].axis = axis;
+    nodes[nodeIndex].split = split;
+
+    std::vector<int> leftIndices;
+    std::vector<int> rightIndices;
+
     for (int idx : indices)
     {
-        float center = 0.5f * (prims[idx].box.min[axis] + prims[idx].box.max[axis]);
-        (center < split ? leftIndices : rightIndices).push_back(idx);
+        const AABB &box = prims[idx].box;
+
+        if (box.min[axis] <= split)
+            leftIndices.push_back(idx);
+
+        if (box.max[axis] >= split)
+            rightIndices.push_back(idx);
     }
 
-    if (leftIndices.empty() || rightIndices.empty())
+    if (leftIndices.size() == indices.size() ||
+        rightIndices.size() == indices.size())
     {
         nodes[nodeIndex].primIndices = indices;
         return nodeIndex;
@@ -118,7 +125,7 @@ void KDTree::intersectNode(int nodeIdx,
                 if (h.intersectionExists && h.t < best.t)
                 {
                     best.intersectionExists = true;
-                    best.typeOfIntersectedObject = 0; // mesh
+                    best.typeOfIntersectedObject = 0;
                     best.objectIndex = p.meshIndex;
                     best.t = h.t;
                     best.rayMeshIntersection = h;

@@ -8,6 +8,9 @@
 struct KDNode
 {
     AABB box;
+    int axis;
+    float split;
+
     int left = -1;
     int right = -1;
     std::vector<int> primIndices;

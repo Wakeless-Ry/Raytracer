@@ -69,10 +69,10 @@ public:
     }
 
     // Ancien compute intersection
-    //  RaySceneIntersection computeIntersection(Ray const &ray)
-    //  {
-    //      RaySceneIntersection result;
-    //      // TODO calculer les intersections avec les objets de la scene et garder la plus proche
+    // RaySceneIntersection computeIntersection(Ray const &ray)
+    // {
+    //     RaySceneIntersection result;
+    //     // TODO calculer les intersections avec les objets de la scene et garder la plus proche
 
     //     size_t mesh_size = meshes.size();
     //     for (size_t i = 0; i < mesh_size; i++)
@@ -252,7 +252,7 @@ public:
         return dotRV * Vec3::compProduct(light_spec, material_spec);
     }
 
-    float portion_visible(Vec3 point, Light light, float nbSamples = 15.f, float lightRadius = 0.3f)
+    float portion_visible(Vec3 point, Light light, float nbSamples = 1.f, float lightRadius = 0.3f)
     {
         float nbOccluded = 0.f;
 
@@ -459,7 +459,7 @@ public:
 
     Vec3 rayTrace(Ray const &rayStart)
     {
-        return rayTraceRecursive(rayStart, 10);
+        return rayTraceRecursive(rayStart, 4);
     }
 
     void setup_single_sphere()
@@ -700,8 +700,8 @@ public:
             Mesh &m = meshes.back();
             m.loadOFF("suzanne.off");
             m.centerAndScaleToUnit();
-            m.scale(Vec3(0.5, 0.5, 0.5));
-            m.translate(Vec3(0.0, -1.25, -1.25));
+            m.scale(Vec3(1.5, 1.5, 1.5));
+            m.translate(Vec3(0.0, -0.2, 0.0));
             m.build_arrays();
             m.material.type = Material_Mirror;
             m.material.diffuse_material = Vec3(0.8f, 0.4f, 1.0f);
@@ -711,20 +711,20 @@ public:
             m.material.index_medium = 0.;
         }
 
-        { // Glass Sphere
-            spheres.resize(spheres.size() + 1);
-            Sphere &s = spheres[spheres.size() - 1];
-            // s.m_center = Vec3(-1.0, -1.25, -0.5);
-            s.m_center = Vec3(0., 0., 1.0);
-            s.m_radius = 0.75f;
-            s.build_arrays();
-            s.material.type = Material_Glass;
-            s.material.diffuse_material = Vec3(1., 1., 1.);
-            s.material.specular_material = Vec3(1., 1., 1.);
-            s.material.shininess = 16;
-            s.material.transparency = 0.9f;
-            s.material.index_medium = 1.5f;
-        }
+        // { // Glass Sphere
+        //     spheres.resize(spheres.size() + 1);
+        //     Sphere &s = spheres[spheres.size() - 1];
+        //     // s.m_center = Vec3(-1.0, -1.25, -0.5);
+        //     s.m_center = Vec3(0., 0., 1.0);
+        //     s.m_radius = 0.75f;
+        //     s.build_arrays();
+        //     s.material.type = Material_Glass;
+        //     s.material.diffuse_material = Vec3(1., 1., 1.);
+        //     s.material.specular_material = Vec3(1., 1., 1.);
+        //     s.material.shininess = 16;
+        //     s.material.transparency = 0.9f;
+        //     s.material.index_medium = 1.5f;
+        // }
 
         // Setup KDTree
 
